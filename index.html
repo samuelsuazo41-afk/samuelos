@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFB000">
+<title>SAMUEL OS v1.1</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root {--amber:#FFB000;--bg:#000;--card:#111;--text:#fff;--muted:#888;--green:#00FF88;--red:#FF4444}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{background:var(--bg);color:var(--text);padding:16px;padding-bottom:80px}
+h1{color:var(--amber);font-size:28px;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#000;border-top:1px solid #222;display:flex;overflow-x:auto}
+.nav button{flex:1;min-width:45px;padding:10px 2px;background:none;border:none;color:var(--muted);font-size:9px}
+.nav button.active{color:var(--amber)}
+.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #222}
+.metric{font-size:32px;color:var(--amber);font-weight:700}
+.label{font-size:12px;color:var(--muted);text-transform:uppercase}
+input,textarea,select,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #333;background:#000;color:var(--text);font-size:16px}
+button.primary{background:var(--amber);color:#000;font-weight:700;border:none}
+button.danger{background:var(--red);color:#fff;font-weight:700;border:none;font-size:12px;padding:8px}
+.flex{display:flex;gap:8px;align-items:center}
+.streak{color:var(--amber);font-size:18px}
+.hide{display:none}
+.badge{background:var(--amber);color:#000;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="nav">
+<button onclick="show('focus')" id="b-focus" class="active">FOCUS</button>
+<button onclick="show('sprint')" id="b-sprint">SPRINT</button>
+<button onclick="show('shipping')" id="b-shipping">SHIP</button>
+<button onclick="show('coach')" id="b-coach">COACH</button>
+<button onclick="show('habits')" id="b-habits">HABITS</button>
+<button onclick="show('board')" id="b-board">BOARD</button>
+<button onclick="show('vision')" id="b-vision">VISION</button>
+<button onclick="show('log')" id="b-log">LOG</button>
+</nav>
+<script>
+const app = document.getElementById('app');
+let state = { timer: 1500, running: false, interval: null };
+
+function show(tab) {
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('b-' + tab).classList.add('active');
+    if (tab === 'focus') renderFocus();
+    if (tab === 'coach') renderCoach();
+    if (tab === 'sprint') app.innerHTML = '<h1>SPRINT</h1><div class="card">Próximamente: Sprints de 90min</div>';
+    if (tab === 'shipping') app.innerHTML = '<h1>SHIP</h1><div class="card">Próximamente: Checklist de envío</div>';
+    if (tab === 'habits') app.innerHTML = '<h1>HABITS</h1><div class="card">Próximamente: Tracker diario</div>';
+    if (tab === 'board') app.innerHTML = '<h1>BOARD</h1><div class="card">Próximamente: Kanban</div>';
+    if (tab === 'vision') app.innerHTML = '<h1>VISION</h1><div class="card">Próximamente: Tu norte</div>';
+    if (tab === 'log') app.innerHTML = '<h1>LOG</h1><div class="card">Próximamente: Diario</div>';
+}
+
+function renderFocus() {
+    app.innerHTML = `
+        <h1>FOCUS</h1>
+        <div class="sub">Pomodoro 25/5</div>
+        <div class="card">
+            <div class="metric" id="timer">25:00</div>
+            <div class="label">TIEMPO RESTANTE</div>
+            <button class="primary" onclick="startFocus()">EMPEZAR POMODORO</button>
+        </div>
+        <div class="card">
+            <div class="label">TAREA PRINCIPAL HOY</div>
+            <input type="text" id="mainTask" placeholder="Escribe tu #1">
+        </div>
+    `;
+    updateTimer();
+}
+
+function renderCoach() {
+    app.innerHTML = `
+        <h1>COACH</h1>
+        <div class="sub">Samuel, ¿en qué estás atascado?</div>
+        <div class="card">
+            <button class="primary" onclick="coachAnswer(1)">No sé por dónde empezar</button>
+            <button class="primary" onclick="coachAnswer(2)">Procrastinando</button>
+            <button class="primary" onclick="coachAnswer(3)">Demasiadas cosas</button>
+            <div id="coachResponse" style="margin-top:16px;color:var(--amber)"></div>
+        </div>
+    `;
+}
+
+function startFocus() {
+    if (state.running) return;
+    state.running = true;
+    state.interval = setInterval(() => {
+        state.timer--;
+        updateTimer();
+        if (state.timer <= 0) {
+            clearInterval(state.interval);
+            alert('Pomodoro completo. Descansa 5min.');
+            state.timer = 1500;
+            state.running = false;
+            updateTimer();
+        }
+    }, 1000);
+}
+
+function updateTimer() {
+    const m = Math.floor(state.timer / 60), s = state.timer % 60;
+    const el = document.getElementById('timer');
+    if (el) el.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function coachAnswer(type) {
+    let res = document.getElementById('coachResponse');
+    if (type == 1) res.innerHTML = '<b>Respuesta:</b><br>Abre FOCUS. Escribe 1 sola tarea. Dale a EMPEZAR. No pienses, haz.';
+    if (type == 2) res.innerHTML = '<b>Respuesta:</b><br>Pon modo avión. 25min solo esa tarea. Si fallas, reinicias.';
+    if (type == 3) res.innerHTML = '<b>Respuesta:</b><br>Borra todo de tu lista. Quédate con 1 cosa. El resto es ruido. Ve a FOCUS.';
+}
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+show('focus');
+</script>
+</body>
+</html>
